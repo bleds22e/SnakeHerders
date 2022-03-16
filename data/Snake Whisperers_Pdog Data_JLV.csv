@@ -1,0 +1,22 @@
+,1= Posting,2= Jump yip,3= Approach,4=Scratching,5=Pushing dirt,6=Rocking,7=Sniffing,8=Rocking + Sniffing,9=Approach +Sniffing,10=Retreat,11= Jump Back,12- Escort,12-Foraging,13- Investigating,14- Touch face,17- Strike,18- Vocalizing,19- Head to Head,20- Fake Foraging,21- Observing,22- Greet Kiss
+1= Posting,NA,,5,,,,1,3,,3,,,,,,,,,,,
+2= Jump yip,,NA,8,,,,,,,1,,,1,,,,,,,1,
+3= Approach,2,,NA,,,1,2,6,4,7,,2,,1,,1,,,,,
+4=Scratching,1,,1,NA,1,1,,14,1,5,,1,,,1,,,1,,,
+5=Pushing dirt,,,,17,NA,,,,,,,,,,,,,,,,
+6=Rocking,1,1,,2,1,NA,1,,,1,,1,,,,,,,,1,
+7=Sniffing,1,1,,,1,1,NA,,,,,,,2,1,,,,,,
+8=Rocking + Sniffing,4,2,1,3,14,,,NA,2,7,1,2,,,,1,,,,,
+9=Approach +Sniffing,,,,1,,,2,3,NA,2,1,,,,,,,,,,
+10=Retreat,2,4,3,3,,2,,7,1,NA,,,3,,,,,,1,,1
+11= Jump Back,,,1,,,,,,1,,NA,,,,,,,,,,
+12- Escort,,2,,,,2,,8,,,,NA,,,,,,1,,,
+12-Foraging,1,,,,,,,,,1,,,NA,,,,,,,,
+13- Investigating,,,1,,,,2,,1,,,,,NA,1,,,,,,
+14- Touch face,,,,,,,1,,,,,,,,NA,,,,,,
+17- Strike,,,,,,,,,,2,,,,,,NA,,,,,
+18- Vocalizing,1,,,,,,1,,,,,,,,,,NA,,,,
+19- Head to Head,,,,,,1,,1,,,,,,,,,,NA,,,
+20- Fake Foraging,,,1,,,,,,,,,,,,,,,,NA,,
+21- Observing,,1,1,,,,,,,,,,,,,,,,,NA,
+22- Greet Kiss,,,,,,,,,,1,,,,,,,,,,,NA
