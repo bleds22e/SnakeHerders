@@ -67,10 +67,13 @@ seq13_matrix <- createSequenceMatrix(stringchar = as.vector(sequence13$ethogram_
   
 # ATTEMPT MARKOV CHAIN #
 
-# need to convert to probability matrix
-mc <- new("markovchain", states = states, 
-           transitionMatrix = as.matrix(matrix), 
-          byrow = TRUE)
-mc
+# need to convert to character matrix??
+seq22_matrix <- as.character(seq22_matrix)
+mc_fit_22 <- markovchainFit(data = seq22_matrix)
+verifyMarkovProperty(seq22_matrix)
 
-mc_fit <- markovchainFit(mc)
+seq13_matrix <- as.character(seq13_matrix)
+mc_fit_13 <- markovchainFit(seq13_matrix)
+
+verifyMarkovProperty(seq13_matrix)
+plot(mc_fit_13)
