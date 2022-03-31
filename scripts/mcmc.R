@@ -7,6 +7,7 @@
 # packages
 library(tidyverse)
 library(markovchain)
+library(diagram)
 
 # load matrix
 matrix <- read_csv("data/JLV_matrix.csv", na = "")
@@ -64,16 +65,24 @@ sequence13 <- sequence %>%
 
 seq13_matrix <- createSequenceMatrix(stringchar = as.vector(sequence13$ethogram_tag),
                                      toRowProbs = TRUE)
-  
+# ATTEMPT PLOTTING #
+plotmat(seq13_matrix,
+        box.size = .05,
+        box.cex = .5,
+        cex.txt = .5)
+
 # ATTEMPT MARKOV CHAIN #
 
 # need to convert to character matrix??
 seq22_matrix <- as.character(seq22_matrix)
 mc_fit_22 <- markovchainFit(data = seq22_matrix)
 verifyMarkovProperty(seq22_matrix)
+assessOrder(seq22_matrix)
 
 seq13_matrix <- as.character(seq13_matrix)
 mc_fit_13 <- markovchainFit(seq13_matrix)
-
 verifyMarkovProperty(seq13_matrix)
-plot(mc_fit_13)
+assessOrder(seq13_matrix)
+mc_fit_13$estimate
+
+chi_sq <- chisq.test(seq13_matrix)
