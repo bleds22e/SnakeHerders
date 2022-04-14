@@ -2,12 +2,13 @@
 # EKB; March 16, 2022 #
 
 
-# PACKAGES and DATA #
+# PACKAGES and DATA --------------------------------------------------------####
 
 # packages
 library(tidyverse)
 library(markovchain)
 library(diagram)
+library(kequate)
 
 # load matrix
 matrix <- read_csv("data/JLV_matrix.csv", na = "")
@@ -24,9 +25,9 @@ matrix <- matrix %>%
 
 # calculate row sums and create proportion table
 matrix <- matrix %>% 
-  mutate(row_sums = rowSums(.[2:ncol(matrix)])) %>% 
-  mutate(across(.cols = c(-Behavior, -row_sums), ~(./row_sums))) %>% 
-  select(-row_sums) %>% 
+  #mutate(row_sums = rowSums(.[2:ncol(matrix)])) %>% 
+  #mutate(across(.cols = c(-Behavior, -row_sums), ~(./row_sums))) %>% 
+  #dplyr::select(-c(row_sums)) %>% 
   column_to_rownames("Behavior")
   
 # save column names in a vector
@@ -35,7 +36,7 @@ states <- colnames(matrix)
 ## Sequence ##
 
 # clean up ethogram tags and states
-sequence <- seq %>% select(ethogram_tag = `Ethogram Tag...10`) %>% 
+sequence <- seq %>% dplyr::select(ethogram_tag = `Ethogram Tag...10`) %>% 
   mutate(across(where(is.character), ~ na_if(.,"")))
 
 sequence <- sequence %>% 
@@ -55,34 +56,55 @@ states <- tibble(number = seq(1:22),
 
 sequence <- full_join(sequence, states)
 
+# TEST MARKOV PROPERTY ------------------------------------------------------####
+
+## CREATE MATRICES ##
+
 # matrix with all 22 states
 seq22_matrix <- createSequenceMatrix(stringchar = as.vector(sequence$ethogram_tag),
-                                     toRowProbs = TRUE)
+                                     toRowProbs = FALSE)
 
 # reduce to 13 states
 sequence13 <- sequence %>% 
   filter(number <= 13)
 
 seq13_matrix <- createSequenceMatrix(stringchar = as.vector(sequence13$ethogram_tag),
-                                     toRowProbs = TRUE)
-# ATTEMPT PLOTTING #
+                                     toRowProbs = FALSE)
+## ATTEMPT PLOTTING ##
 plotmat(seq13_matrix,
         box.size = .05,
         box.cex = .5,
         cex.txt = .5)
 
-# ATTEMPT MARKOV CHAIN #
+## TEST MARKOV PROPERTY ##
 
 # need to convert to character matrix??
-seq22_matrix <- as.character(seq22_matrix)
-mc_fit_22 <- markovchainFit(data = seq22_matrix)
-verifyMarkovProperty(seq22_matrix)
-assessOrder(seq22_matrix)
+seq22_matrix_char <- as.character(seq22_matrix)
+mc_fit_22 <- markovchainFit(data = seq22_matrix_char)
+verifyMarkovProperty(seq22_matrix_char)
 
-seq13_matrix <- as.character(seq13_matrix)
-mc_fit_13 <- markovchainFit(seq13_matrix)
-verifyMarkovProperty(seq13_matrix)
-assessOrder(seq13_matrix)
-mc_fit_13$estimate
+# is significant, meaning is non-random
+seq13_matrix_char <- as.character(seq13_matrix)
+mc_fit_13 <- markovchainFit(seq13_matrix_char)
+verifyMarkovProperty(seq13_matrix_char)
 
+
+# FREEMAN-TUKEY RESIDUALS --------------------------------------------------####
+
+# run chi-sq test to get expected values matrix
 chi_sq <- chisq.test(seq13_matrix)
+chi_sq$expected
+
+# attempt FTres() from kequate
+FT_residuals <- FTres(seq13_matrix, chi_sq$expected)
+FT_res_matrix <- matrix(FT_residuals, nrow = 13, ncol = 13)
+
+# plot matrix
+plot.matrix:::plot.matrix(FT_res_matrix)
+
+# chi.sq pairwise? why do these not work?
+rmngb::pairwise.chisq.test(x = seq13_matrix)
+RVAideMemoire::chisq.multcomp(x = seq13_matrix)
+RVAideMemoire::fisher.multcomp(x = seq13_matrix)
+rstatix::fisher_test(seq13_matrix, simulate.p.value = TRUE)
+rstatix::row_wise_fisher_test(seq13_matrix, simulate.p.values=TRUE)
