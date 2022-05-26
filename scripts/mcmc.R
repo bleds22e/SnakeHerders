@@ -126,8 +126,10 @@ corrplot(seq13_matrix, is.corr = FALSE)
 source("scripts/correlation_matrix_fxn.R")
 correlation_matrix(as.data.frame(seq13_matrix), replace_diagonal = TRUE)
 
-rcorr_seq13 <- rcorr(seq13_matrix, type = "pearson", )
+rcorr_seq13 <- rcorr(seq13_matrix, type = "pearson")
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
 
 corrplot(rcorr_FTres$r, is.corr = TRUE, diag = FALSE, type = "upper")
 corrplot(rcorr_FTres$P)
+corrplot(rcorr_seq13$r, diag = FALSE, type = "lower")
+
