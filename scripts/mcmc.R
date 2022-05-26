@@ -54,7 +54,12 @@ states <- tibble(number = seq(1:22),
                                   "Vocalizing", "Head to Head", "Fake foraging",
                                   "Observing", "Greet-kiss", "Running"))
 
-sequence <- full_join(sequence, states)
+# remove NAs and any doubles
+sequence <- full_join(sequence, states) %>% 
+  drop_na() %>% 
+  filter(ethogram_tag != lag(ethogram_tag))
+
+
 
 # TEST MARKOV PROPERTY ------------------------------------------------------####
 
@@ -64,12 +69,14 @@ sequence <- full_join(sequence, states)
 seq22_matrix <- createSequenceMatrix(stringchar = as.vector(sequence$ethogram_tag),
                                      toRowProbs = FALSE)
 
-# reduce to 13 states
+# reduce to 13 states and remove any new doubles created
 sequence13 <- sequence %>% 
-  filter(number <= 13)
+  filter(number <= 13) %>% 
+  filter(ethogram_tag != lag(ethogram_tag))
 
 seq13_matrix <- createSequenceMatrix(stringchar = as.vector(sequence13$ethogram_tag),
                                      toRowProbs = FALSE)
+
 ## ATTEMPT PLOTTING ##
 plotmat(seq13_matrix,
         box.size = .05,
@@ -114,9 +121,13 @@ rstatix::row_wise_fisher_test(seq13_matrix, simulate.p.values=TRUE)
 
 library(corrplot)
 corrplot(FT_res_matrix, is.corr = FALSE)
+corrplot(seq13_matrix, is.corr = FALSE)
 
 source("scripts/correlation_matrix_fxn.R")
-correlation_matrix(as.data.frame(seq13_matrix))
+correlation_matrix(as.data.frame(seq13_matrix), replace_diagonal = TRUE)
 
-rcorr(seq13_matrix, type = "pearson")
-rcorr(FT_res_matrix, type = "pearson")
+rcorr_seq13 <- rcorr(seq13_matrix, type = "pearson", )
+rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
+
+corrplot(rcorr_FTres$r, is.corr = TRUE, diag = FALSE, type = "upper")
+corrplot(rcorr_FTres$P)
