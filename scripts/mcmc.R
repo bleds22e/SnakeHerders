@@ -7,8 +7,9 @@
 # packages
 library(tidyverse)
 library(markovchain)
-library(diagram)
 library(kequate)
+library(Hmisc)
+library(corrplot)
 
 # load matrix
 matrix <- read_csv("data/JLV_matrix.csv", na = "")
@@ -59,6 +60,15 @@ sequence <- full_join(sequence, states) %>%
   drop_na() %>% 
   filter(ethogram_tag != lag(ethogram_tag))
 
+# reduce to 13 states and remove any new doubles created
+sequence13 <- sequence %>% 
+  filter(number <= 13) %>% 
+  filter(ethogram_tag != lag(ethogram_tag))
+
+# need to remove counts that are jumping from one observation to the next ###
+
+
+
 
 
 # TEST MARKOV PROPERTY ------------------------------------------------------####
@@ -68,12 +78,7 @@ sequence <- full_join(sequence, states) %>%
 # matrix with all 22 states
 seq22_matrix <- createSequenceMatrix(stringchar = as.vector(sequence$ethogram_tag),
                                      toRowProbs = FALSE)
-
-# reduce to 13 states and remove any new doubles created
-sequence13 <- sequence %>% 
-  filter(number <= 13) %>% 
-  filter(ethogram_tag != lag(ethogram_tag))
-
+# matrix with core 13 states
 seq13_matrix <- createSequenceMatrix(stringchar = as.vector(sequence13$ethogram_tag),
                                      toRowProbs = FALSE)
 
@@ -85,7 +90,7 @@ plotmat(seq13_matrix,
 
 ## TEST MARKOV PROPERTY ##
 
-# need to convert to character matrix??
+# need to convert to character matrix
 seq22_matrix_char <- as.character(seq22_matrix)
 mc_fit_22 <- markovchainFit(data = seq22_matrix_char)
 verifyMarkovProperty(seq22_matrix_char)
@@ -96,7 +101,7 @@ mc_fit_13 <- markovchainFit(seq13_matrix_char)
 verifyMarkovProperty(seq13_matrix_char)
 
 
-# FREEMAN-TUKEY RESIDUALS --------------------------------------------------####
+# TESTING RESIDUALS --------------------------------------------------------####
 
 # run chi-sq test to get expected values matrix
 chi_sq <- chisq.test(seq13_matrix)
@@ -106,29 +111,11 @@ chi_sq$expected
 FT_residuals <- FTres(seq13_matrix, chi_sq$expected)
 FT_res_matrix <- matrix(FT_residuals, nrow = 13, ncol = 13)
 
-# plot matrix
-plot.matrix:::plot.matrix(FT_res_matrix)
-
-# chi.sq pairwise? why do these not work?
-rmngb::pairwise.chisq.test(x = FT_res_matrix)
-RVAideMemoire::chisq.multcomp(x = seq13_matrix)
-RVAideMemoire::fisher.multcomp(x = seq13_matrix)
-rstatix::fisher_test(seq13_matrix, simulate.p.value = TRUE)
-rstatix::row_wise_fisher_test(seq13_matrix, simulate.p.values=TRUE)
-
-## all of these produce values that are not 1 along the diagonal, which I don't
-# really understand?
-
-library(corrplot)
-corrplot(FT_res_matrix, is.corr = FALSE)
-corrplot(seq13_matrix, is.corr = FALSE)
-
-source("scripts/correlation_matrix_fxn.R")
-correlation_matrix(as.data.frame(seq13_matrix), replace_diagonal = TRUE)
-
+# Get correlations
 rcorr_seq13 <- rcorr(seq13_matrix, type = "pearson")
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
 
+# Plot Correlation Plots
 corrplot(rcorr_FTres$r, is.corr = TRUE, diag = FALSE, type = "upper")
 corrplot(rcorr_FTres$P)
 corrplot(rcorr_seq13$r, diag = FALSE, type = "lower")
