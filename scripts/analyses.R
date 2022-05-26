@@ -8,13 +8,10 @@
 
 # Packages #
 
-# install `groundhog` package if not installed;
-# then load (and install if needed) all packages current at set date
-# for more info on `groundhog`, see: https://groundhogr.com/
-if (!require("groundhog")) install.packages("groundhog")
-groundhog::groundhog.library(c("tidyverse", "markovchain", "kequate",
-                               "Hmisc", "corrplot"),
-                             date = "2022-05-01")
+# install `pacman` package if not installed;
+# then load (and install if needed) all packages
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, markovchain, kequate, Hmisc, corrplot)
 
 # Data #
 
