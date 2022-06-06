@@ -118,13 +118,13 @@ colnames(FT_res_matrix) <- colnames(seq13_matrix)
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
 
 # plot correlation
-dev.copy(png, "plots/FT_residuals.png")
+png("plots/FT_residuals.png", res = 300, width = 200, height = 200, units = "mm")
 corrplot(rcorr_FTres$r, is.corr = TRUE, diag = FALSE, 
-         type = "upper", tl.col = "black")
+         type = "lower", tl.col = "black")
 dev.off()
 
 # pull out significance values
-corr_matrix <- correlation_matrix(as.data.frame(FT_res_matrix), replace_diagonal = )
-save_correlation_matrix(as.data.frame(FT_res_matrix),
-                        "data/correlation_matrix_FTres.csv",
-                        digits = 3, use = "lower", replace_diagonal = TRUE)
+corr_matrix <- correlation_matrix(as.data.frame(FT_res_matrix), 
+                                  replace_diagonal = TRUE, use = "lower")
+corr_matrix <- as.data.frame(corr_matrix, row.names = colnames(corr_matrix))
+write.csv(corr_matrix, "data/corr_matrix_FTres.csv")
