@@ -100,7 +100,7 @@ markov_prop13 <- (verifyMarkovProperty(seq13_matrix_char))
 # Focusing on reduced matrix #
 
 # run chi-sq test 
-chi_sq <- chisq.test(seq13_matrix, simulate.p.value = TRUE)
+chi_sq <- chisq.test(seq13_matrix)
 chi_sq
 
 # get expected values to compare to observed
@@ -116,11 +116,12 @@ colnames(FT_res_matrix) <- colnames(seq13_matrix)
 
 # get correlations
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
+rcorr_FTres
 
 # plot correlation
 png("plots/FT_residuals.png", res = 300, width = 200, height = 200, units = "mm")
-corrplot(rcorr_FTres$r, is.corr = TRUE, diag = FALSE, 
-         type = "lower", tl.col = "black")
+corrplot(rcorr_FTres$r, is.corr = FALSE, diag = FALSE, 
+         type = "lower", tl.col = "black",)
 dev.off()
 
 # pull out significance values
@@ -128,3 +129,40 @@ corr_matrix <- correlation_matrix(as.data.frame(FT_res_matrix),
                                   replace_diagonal = TRUE, use = "lower")
 corr_matrix <- as.data.frame(corr_matrix, row.names = colnames(corr_matrix))
 write.csv(corr_matrix, "data/corr_matrix_FTres.csv")
+
+######################### RATTLE SNAKES #################################
+
+snake_dat <- read_csv("data/EKP_matrix_snake.csv")
+
+
+# Clean up ethogram tags and states #
+
+# get required columns, replace blanks with NA, and fill in videoID values
+snake_seq <- snake_dat %>% dplyr::select(videoID = `Video ID`, # will need later
+                                  number = `Ethogram Tag...14`) %>% 
+  mutate(across(where(is.character), ~ na_if(.,""))) %>% 
+  fill(videoID, .direction = "down")
+
+states <- snake_dat %>% 
+  dplyr::select(states = `Numerical Category...13`) %>% 
+  drop_na() %>% 
+  separate(states, c("number", "ethogram_tag"), sep = " = ") %>% 
+  mutate(number = as.numeric(number))
+
+# merge df and remove NAs from ethogram_tag or number columns
+snake_seq <- full_join(snake_seq, states) %>% 
+  drop_na(ethogram_tag, number)
+
+# Given the way the sequence data were entered, the last action from one obs and
+# the first action from the next would be included in the matrix. By adding an
+# NA back in at the start of every video, those action pairs will not be included
+# in the the matrix.
+
+snake_seq <- snake_seq %>% 
+  group_split(videoID) %>%      # create multiple dfs based on videoID column
+  map_dfr(~ .x %>% add_row())   # add a row with NAs to the end of each dataframe 
+# the map_dfr function then recombines into one df
+
+# remove any doubled behaviors
+snake_seq <- snake_seq %>%  
+  filter(ethogram_tag != lag(ethogram_tag))
