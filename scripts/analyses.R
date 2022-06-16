@@ -29,7 +29,8 @@ seq <- read_csv("data/JLV_seq.csv")
 sequence <- seq %>% dplyr::select(videoID = `Video ID`, # will need later
                                   ethogram_tag = `Ethogram Tag...10`) %>% 
   mutate(across(where(is.character), ~ na_if(.,""))) %>% 
-  fill(videoID, .direction = "down")
+  fill(videoID, .direction = "down") %>% 
+  filter(videoID != 4795, videoID != 4793, videoID != 4778)
 
 # standardize ethogram_tags
 sequence <- sequence %>% 
@@ -51,6 +52,7 @@ states <- tibble(number = seq(1:22),
 # merge df and remove NAs from ethogram_tag or number columns
 sequence <- full_join(sequence, states) %>% 
   drop_na(ethogram_tag, number)
+  
 
 # Given the way the sequence data were entered, the last action from one obs and
 # the first action from the next would be included in the matrix. By adding an
@@ -139,18 +141,18 @@ snake_dat <- read_csv("data/EKP_matrix_snake.csv")
 
 # get required columns, replace blanks with NA, and fill in videoID values
 snake_seq <- snake_dat %>% dplyr::select(videoID = `Video ID`, # will need later
-                                  number = `Ethogram Tag...14`) %>% 
+                                  number_snake = `Ethogram Tag...14`) %>% 
   mutate(across(where(is.character), ~ na_if(.,""))) %>% 
   fill(videoID, .direction = "down")
 
-states <- snake_dat %>% 
+states_snake <- snake_dat %>% 
   dplyr::select(states = `Numerical Category...13`) %>% 
   drop_na() %>% 
-  separate(states, c("number", "ethogram_tag"), sep = " = ") %>% 
-  mutate(number = as.numeric(number))
+  separate(states, c("number_snake", "ethogram_tag_snake"), sep = " = ") %>% 
+  mutate(number_snake = as.numeric(number_snake))
 
 # merge df and remove NAs from ethogram_tag or number columns
-snake_seq <- full_join(snake_seq, states) %>% 
+snake_seq <- full_join(snake_seq, states_snake) %>% 
   drop_na(ethogram_tag, number)
 
 # Given the way the sequence data were entered, the last action from one obs and
