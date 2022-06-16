@@ -56,10 +56,21 @@ states_snake <- seq %>%
 snake_seq <- full_join(snake_seq, states_snake)
 
 
-# COMBINE ------------------------------------------------------------------####
+# rEDM ------------------------------------------------------------------####
 
 all_dat <- bind_cols(sequence, dplyr::select(snake_seq, -videoID)) %>% 
   slice(1:(n()-20)) %>%         # remove last 20 rows for juvnile pdogs
   group_split(videoID) %>%      # create multiple dfs based on videoID column
-  map_dfr(~ .x %>% add_row())
+  map_dfr(~ .x %>% add_row()) %>% 
+  mutate(Time = 1:nrow(.)) %>% 
+  select(Time, videoID:ethogram_tag_snake)
+
+
+library(rEDM)
+
+# calculate dimensionality
+rho_E <- EmbedDimension(dataFrame = select(all_dat, Time, number_pdog, number_snake), 
+                        columns = "number_pdog", target = "number_pdog", 
+                        lib = "1 25", pred = "25 100", showPlot = TRUE)
+
 
