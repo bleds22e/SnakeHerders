@@ -119,6 +119,7 @@ colnames(FT_res_matrix) <- colnames(seq13_matrix)
 # get correlations
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
 rcorr_FTres
+capture.output(rcorr_FTres, file = "data/rcorr_FTres_results.csv")
 
 # plot correlation
 png("plots/FT_residuals.png", res = 300, width = 200, height = 200, units = "mm")
