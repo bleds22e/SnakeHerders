@@ -122,8 +122,10 @@ colnames(FT_res_matrix) <- colnames(seq12_matrix)
 
 # get correlations
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
-rcorr_FTres
-capture.output(rcorr_FTres, file = "data/rcorr_FTres_results.csv")
+
+# save significant values
+rcorr_FT_sig <- as.data.frame(rcorr_FTres$P, row.names = colnames(FT_res_matrix))
+write.csv(rcorr_FT_sig, "data/rcorr_FTres_sig.csv")
 
 # plot correlation
 png("plots/FT_residuals.png", res = 300, width = 200, height = 200, units = "mm")
@@ -131,7 +133,7 @@ corrplot(rcorr_FTres$r, is.corr = FALSE, diag = FALSE,
          type = "lower", tl.col = "black",)
 dev.off()
 
-# pull out significance values
+# correlation value table with significance values marked with **
 corr_matrix <- correlation_matrix(as.data.frame(FT_res_matrix), 
                                   replace_diagonal = TRUE, use = "lower")
 corr_matrix <- as.data.frame(corr_matrix, row.names = colnames(corr_matrix))
