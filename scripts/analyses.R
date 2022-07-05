@@ -37,12 +37,13 @@ sequence <- sequence %>%
   mutate(ethogram_tag = replace(ethogram_tag, ethogram_tag == "Rocking +Sniffing", "Rocking + Sniffing"),
          ethogram_tag = replace(ethogram_tag, ethogram_tag == "Jump Yip", "Jump yip"),
          ethogram_tag = replace(ethogram_tag, ethogram_tag == "Moving away", "Retreat"),
-         ethogram_tag = replace(ethogram_tag, ethogram_tag == "Moving toward", "Approach"))
+         ethogram_tag = replace(ethogram_tag, ethogram_tag == "Moving toward", "Approach"),
+         ethogram_tag = replace(ethogram_tag, ethogram_tag == "Pushing dirt", "Foreleg drumming"))
 
 # create df with numbers for each ethogram_tag
 states <- tibble(number = seq(1:22),
                  ethogram_tag = c("Posting", "Jump yip", "Approach", "Scratching",
-                                  "Pushing dirt", "Rocking", "Sniffing", 
+                                  "Foreleg drumming", "Rocking", "Sniffing", 
                                   "Rocking + Sniffing", "Approach + Sniffing",
                                   "Retreat", "Jump back", "Escorting", "Foraging",
                                   "Investigating", "Touching face", "Strike",
@@ -69,8 +70,8 @@ sequence <- sequence %>%
   filter(ethogram_tag != lag(ethogram_tag))
 
 # reduce to 13 key states and remove any new doubles created
-sequence13 <- sequence %>% 
-  filter(number <= 13) %>% 
+sequence12 <- sequence %>% 
+  filter(number <= 12) %>% 
   filter(ethogram_tag != lag(ethogram_tag))
 
 
@@ -81,8 +82,8 @@ sequence13 <- sequence %>%
 # matrix with all 22 states
 seq22_matrix <- createSequenceMatrix(stringchar = as.vector(sequence$ethogram_tag),
                                      toRowProbs = FALSE)
-# matrix with core 13 states
-seq13_matrix <- createSequenceMatrix(stringchar = as.vector(sequence13$ethogram_tag),
+# matrix with core 12 states
+seq12_matrix <- createSequenceMatrix(stringchar = as.vector(sequence12$ethogram_tag),
                                      toRowProbs = FALSE)
 
 
@@ -93,8 +94,8 @@ seq22_matrix_char <- as.character(seq22_matrix) # convert to character matrix
 markov_prop22 <- (verifyMarkovProperty(seq22_matrix_char))
 
 # reduced matrix
-seq13_matrix_char <- as.character(seq13_matrix)
-markov_prop13 <- (verifyMarkovProperty(seq13_matrix_char))
+seq12_matrix_char <- as.character(seq12_matrix)
+markov_prop12 <- (verifyMarkovProperty(seq12_matrix_char))
 
 
 # TESTING RESIDUALS --------------------------------------------------------####
@@ -102,19 +103,22 @@ markov_prop13 <- (verifyMarkovProperty(seq13_matrix_char))
 # Focusing on reduced matrix #
 
 # run chi-sq test 
-chi_sq <- chisq.test(seq13_matrix)
+chi_sq <- chisq.test(seq12_matrix)
 chi_sq
+
+chi_sq_psim <- chisq.test(seq12_matrix, simulate.p.value = TRUE)
+chi_sq_psim
 
 # get expected values to compare to observed
 expected <- chi_sq$expected
 
 # get Freeman-Tukey residuals (observed vs. expected values)
-FT_res <- kequate::FTres(seq13_matrix, expected)
+FT_res <- kequate::FTres(seq12_matrix, expected)
 
 # turn into a matrix of FT values
-FT_res_matrix <- matrix(FT_res, nrow = 13, ncol = 13)
-rownames(FT_res_matrix) <- rownames(seq13_matrix)
-colnames(FT_res_matrix) <- colnames(seq13_matrix)
+FT_res_matrix <- matrix(FT_res, nrow = 12, ncol = 12)
+rownames(FT_res_matrix) <- rownames(seq12_matrix)
+colnames(FT_res_matrix) <- colnames(seq12_matrix)
 
 # get correlations
 rcorr_FTres <- rcorr(FT_res_matrix, type = "pearson")
@@ -132,40 +136,3 @@ corr_matrix <- correlation_matrix(as.data.frame(FT_res_matrix),
                                   replace_diagonal = TRUE, use = "lower")
 corr_matrix <- as.data.frame(corr_matrix, row.names = colnames(corr_matrix))
 write.csv(corr_matrix, "data/corr_matrix_FTres.csv")
-
-######################### RATTLE SNAKES #################################
-
-snake_dat <- read_csv("data/EKP_matrix_snake.csv")
-
-
-# Clean up ethogram tags and states #
-
-# get required columns, replace blanks with NA, and fill in videoID values
-snake_seq <- snake_dat %>% dplyr::select(videoID = `Video ID`, # will need later
-                                  number_snake = `Ethogram Tag...14`) %>% 
-  mutate(across(where(is.character), ~ na_if(.,""))) %>% 
-  fill(videoID, .direction = "down")
-
-states_snake <- snake_dat %>% 
-  dplyr::select(states = `Numerical Category...13`) %>% 
-  drop_na() %>% 
-  separate(states, c("number_snake", "ethogram_tag_snake"), sep = " = ") %>% 
-  mutate(number_snake = as.numeric(number_snake))
-
-# merge df and remove NAs from ethogram_tag or number columns
-snake_seq <- full_join(snake_seq, states_snake) %>% 
-  drop_na(ethogram_tag, number)
-
-# Given the way the sequence data were entered, the last action from one obs and
-# the first action from the next would be included in the matrix. By adding an
-# NA back in at the start of every video, those action pairs will not be included
-# in the the matrix.
-
-snake_seq <- snake_seq %>% 
-  group_split(videoID) %>%      # create multiple dfs based on videoID column
-  map_dfr(~ .x %>% add_row())   # add a row with NAs to the end of each dataframe 
-# the map_dfr function then recombines into one df
-
-# remove any doubled behaviors
-snake_seq <- snake_seq %>%  
-  filter(ethogram_tag != lag(ethogram_tag))
