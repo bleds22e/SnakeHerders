@@ -13,6 +13,12 @@
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, markovchain, kequate, Hmisc, corrplot)
 
+# tidyverse: v1.3.1
+# markovchain: v0.8.9
+# kequate: v1.6.4
+# Hmisc: v4.7.0
+# corrplot: v0.92
+
 # Correlation Table Functions #
 source("scripts/correlation_matrix_fxn.R")
 
